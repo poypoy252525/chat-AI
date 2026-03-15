@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount', 
 
     'core',
+    'chat'
 ]
 
 MIDDLEWARE = [
