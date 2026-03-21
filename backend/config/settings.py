@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'corsheaders',
+
     'rest_framework',
     'rest_framework.authtoken',
     'dj_rest_auth',
@@ -66,6 +68,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -89,6 +92,11 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
@@ -146,7 +154,7 @@ REST_AUTH = {
     'JWT_AUTH_COOKIE': 'access-token',
     'JWT_AUTH_REFRESH_COOKIE': 'refresh-token',
     'JWT_AUTH_HTTPONLY': True,
-    'JWT_AUTH_SECURE': not DEBUG,  # Set to True in production (HTTPS)
+    'JWT_AUTH_SECURE': not DEBUG,
     'JWT_AUTH_SAMESITE': 'Lax',
 }
 
@@ -182,3 +190,20 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 AUTH_USER_MODEL = 'core.User'
+
+# ⚠️  IMPORTANT: CORS_ALLOW_ALL_ORIGINS cannot be used with cookie-based JWT auth.
+# Browsers block credentials (cookies) on wildcard CORS origins.
+# Switch to an explicit allowlist and enable credentials:
+#
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",   # local frontend dev server
+    "https://your-production-domain.com",
+]
+#
+# Remove or comment out the line below once you set CORS_ALLOWED_ORIGINS:
+# CORS_ALLOW_ALL_ORIGINS = True  # ← TODO: replace with CORS_ALLOWED_ORIGINS above
+
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = ("email")
