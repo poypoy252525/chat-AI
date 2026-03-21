@@ -29,11 +29,13 @@ export const routes = createBrowserRouter([
       },
       {
         path: "/",
-        element: (
-          <ProtectedRoute>
-            <ChatInterface />
-          </ProtectedRoute>
-        ),
+        element: <ProtectedRoute />,
+        children: [
+          {
+            index: true,
+            element: <ChatInterface />,
+          },
+        ],
       },
     ],
   },
