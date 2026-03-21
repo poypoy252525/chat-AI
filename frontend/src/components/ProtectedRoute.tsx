@@ -1,5 +1,9 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
 
 /**
  * Wraps any route that requires the user to be authenticated.
@@ -8,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
  * this prevents a flash redirect to /login for already-logged-in users
  * who just refreshed the page.
  */
-export function ProtectedRoute() {
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
 
   // Still checking session — don't redirect yet
@@ -24,5 +28,5 @@ export function ProtectedRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  return <Outlet />;
+  return <>{children}</>;
 }

@@ -3,6 +3,7 @@ import LoginPage from "./pages/login-page";
 import { ChatInterface } from "./components/chat";
 import { AuthProvider } from "./context/auth-context";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import RootLayout from "./root-layout";
 
 // ---------------------------------------------------------------------------
 // AuthLayout — wraps all routes with AuthProvider.
@@ -29,7 +30,11 @@ export const routes = createBrowserRouter([
       },
       {
         path: "/",
-        element: <ProtectedRoute />,
+        element: (
+          <ProtectedRoute>
+            <RootLayout />
+          </ProtectedRoute>
+        ),
         children: [
           {
             index: true,

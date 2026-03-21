@@ -27,7 +27,7 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
     if (!scrollArea) return false;
 
     const viewport = scrollArea.querySelector(
-      "[data-radix-scroll-area-viewport]"
+      "[data-radix-scroll-area-viewport]",
     );
     if (!viewport) return false;
 
@@ -42,7 +42,7 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
     if (!scrollArea) return;
 
     const viewport = scrollArea.querySelector(
-      "[data-radix-scroll-area-viewport]"
+      "[data-radix-scroll-area-viewport]",
     );
     if (!viewport) return;
 
@@ -66,7 +66,7 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
   useEffect(() => {
     const scrollArea = scrollAreaRef.current;
     const viewport = scrollArea?.querySelector(
-      "[data-radix-scroll-area-viewport]"
+      "[data-radix-scroll-area-viewport]",
     );
 
     if (viewport) {
@@ -99,7 +99,7 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
     if (!error) return null;
 
     return (
-      <div className="bg-background">
+      <div className="flex-1 bg-background">
         <div className="max-w-3xl mx-auto px-3 sm:px-4 lg:px-6 pb-2">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -127,8 +127,8 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
   return (
     <div
       className={cn(
-        "flex flex-col h-full bg-background overflow-hidden",
-        className
+        "flex-1 flex flex-col h-full bg-background overflow-hidden",
+        className,
       )}
     >
       {/* Messages Area */}
