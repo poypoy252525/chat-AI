@@ -1,8 +1,11 @@
+from django.http import StreamingHttpResponse
+from rest_framework.decorators import action
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import CursorPagination
 from .models import Conversation, Message
-from .serializers import ConversationSerializer, MessageSerializer
+from .serializers import ConversationSerializer, MessageSerializer, StreamRequestSerializer
+from .services.message_service import MessageService
 
 
 class StandardResultsCursorPagination(CursorPagination):
@@ -40,5 +43,26 @@ class MessageViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(conversation_id=self.kwargs['conversation_pk'])
+
+    @action(detail=False, methods=['post'], url_path='stream')
+    def stream(self, request, conversation_pk=None):
+        """
+        Endpoint to handle streaming AI responses via Server-Sent Events (SSE).
+        """
+        serializer = StreamRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        user_text = serializer.validated_data['content']
+        settings = serializer.validated_data.get('settings', {})
+        
+        # message_service encapsulates all the logic and returns a generator
+        stream_gen = MessageService.handle_message_stream(
+            conversation_id=conversation_pk,
+            user=request.user,
+            user_text=user_text,
+            settings=settings
+        )
+        
+        return StreamingHttpResponse(stream_gen, content_type='text/event-stream')
 
     
