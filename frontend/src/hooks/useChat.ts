@@ -25,7 +25,7 @@ const getLLMProvider = (): LLMProvider => {
 
 export const useChat = (conversationId?: string): ChatHook => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!conversationId);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const llmProvider = useRef<LLMProvider | null>(null);
@@ -57,7 +57,10 @@ export const useChat = (conversationId?: string): ChatHook => {
           timestamp: new Date(msg.created_at),
           metadata: msg.metadata,
         }));
-        setMessages(history);
+        
+        // Only set the history if we don't have active messages already
+        // (to prevent overwriting a stream that started after the fetch triggered)
+        setMessages((prev) => (prev.length === 0 ? history : prev));
       } catch (err) {
         console.error("Failed to fetch message history:", err);
         setError("Failed to load conversation history.");
@@ -154,8 +157,11 @@ export const useChat = (conversationId?: string): ChatHook => {
           )
         );
       } catch (err) {
-        if (err instanceof Error && err.name === "AbortError") {
-          // Request was aborted, don't update state
+        if (
+          (err instanceof Error && (err.name === "AbortError" || err.message?.includes("canceled"))) ||
+          (err && typeof err === "object" && "isAxiosError" in err && (err as any).name === "CanceledError")
+        ) {
+          // Request was aborted or canceled, don't show error
           return;
         }
 

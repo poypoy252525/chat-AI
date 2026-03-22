@@ -21,7 +21,7 @@ class GeminiClient(BaseAIClient):
     ) -> Generator[Dict[str, Any], None, None]:
         
         # Default model if not provided
-        model = settings.get("model", "gemini-2.5-flash")
+        model = settings.get("model", "gemini-2.5-flash-lite")
         
         # Prepare system instruction
         config_params = {}
@@ -69,3 +69,36 @@ class GeminiClient(BaseAIClient):
         except Exception as e:
             # Handle API errors gracefully or yield an error chunk if appropriate
             yield {"text": f"\n\n[Error from Gemini API: {str(e)}]", "error": True, "metadata": None}
+
+    def generate_content(
+        self,
+        system_prompt: str,
+        messages: List[Dict[str, str]],
+        settings: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Generates a one-shot response from the AI.
+        """
+        model = settings.get("model", "gemini-2.5-flash-lite")
+        config_params = {}
+        if system_prompt:
+            config_params["system_instruction"] = system_prompt
+        
+        config = types.GenerateContentConfig(**config_params)
+
+        gemini_contents = []
+        for msg in messages:
+            role = "user" if msg["role"] == "user" else "model"
+            gemini_contents.append(
+                types.Content(role=role, parts=[types.Part.from_text(text=msg["content"])])
+            )
+
+        try:
+            response = self.client.models.generate_content(
+                model=model,
+                contents=gemini_contents,
+                config=config,
+            )
+            return {"text": response.text, "metadata": None}
+        except Exception as e:
+            return {"text": f"[Error: {str(e)}]", "error": True, "metadata": None}

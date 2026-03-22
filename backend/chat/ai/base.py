@@ -27,4 +27,14 @@ class BaseAIClient(ABC):
             Format: {"text": "chunk of text", "metadata": {...}} 
             (metadata is usually None until the very end)
         """
+    @abstractmethod
+    def generate_content(
+        self,
+        system_prompt: str,
+        messages: List[Dict[str, str]],
+        settings: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Generates a one-shot response from the AI.
+        """
         pass

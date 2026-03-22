@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Conversation, Message
+from .services.summary_service import SummaryService
 
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,14 +23,15 @@ class ConversationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         initial_message = validated_data.pop('initial_message', None)
         if not validated_data.get('title') and initial_message:
-            # Generate title from first few words of message
-            words = initial_message.split()
-            validated_data['title'] = " ".join(words[:5]) + ("..." if len(words) > 5 else "")
+            # Generate title using AI
+            validated_data['title'] = SummaryService.generate_title(initial_message)
         elif not validated_data.get('title'):
             validated_data['title'] = "New Conversation"
             
-        if not validated_data.get('summary'):
-            validated_data['summary'] = initial_message[:100] if initial_message else "No summary available"
+        if not validated_data.get('summary') and initial_message:
+            validated_data['summary'] = SummaryService.generate_summary(initial_message)
+        elif not validated_data.get('summary'):
+            validated_data['summary'] = "No summary available"
             
         return super().create(validated_data)
 

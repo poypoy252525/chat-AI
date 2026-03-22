@@ -25,6 +25,7 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
 
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const location = useLocation();
+  const initialSendTriggered = useRef<string | null>(null);
 
   // Reset loading state when conversation ID changes
   useEffect(() => {
@@ -38,9 +39,18 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
       initialImages?: ImageAttachment[];
     } | null;
     
-    if (state?.initialMessage && conversationId && messages.length === 0 && !isLoading) {
+    // Check if we have an initial message and it's for this specific conversation
+    // and we haven't already triggered it for this ID.
+    if (
+      state?.initialMessage && 
+      conversationId && 
+      initialSendTriggered.current !== conversationId &&
+      messages.length === 0 && 
+      !isLoading
+    ) {
+      initialSendTriggered.current = conversationId;
       sendMessage(state.initialMessage, state.initialImages);
-      // Clear state so it doesn't refire on internal component updates
+      // Clear state so it doesn't refire on internal component updates or refreshes
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [conversationId, messages.length, isLoading, location.state, sendMessage, navigate, location.pathname]);
@@ -199,18 +209,25 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
           <div className="max-w-3xl mx-auto">
             <div className="flex flex-col gap-2 p-3 sm:p-4 lg:p-6">
               {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center px-4">
-                  <MessageSquare className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/30 mb-4 sm:mb-6" />
-                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                    Delfin Chatbot
-                  </h2>
-                  <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3 ">
-                    How can I help you today?
-                  </h3>
-                  <p className="text-sm sm:text-base text-muted-foreground max-w-sm sm:max-w-md tracking-tight">
-                    Start a conversation by typing a message below.
-                  </p>
-                </div>
+                isLoading && conversationId ? (
+                  <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center px-4">
+                    <RefreshCw className="h-8 w-8 text-primary animate-spin mb-4" />
+                    <p className="text-muted-foreground">Loading conversation...</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center px-4">
+                    <MessageSquare className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/30 mb-4 sm:mb-6" />
+                    <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+                      Delfin Chatbot
+                    </h2>
+                    <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3 ">
+                      How can I help you today?
+                    </h3>
+                    <p className="text-sm sm:text-base text-muted-foreground max-w-sm sm:max-w-md tracking-tight">
+                      Start a conversation by typing a message below.
+                    </p>
+                  </div>
+                )
               ) : (
                 messages.map((message, index) => (
                   <MessageBubble
