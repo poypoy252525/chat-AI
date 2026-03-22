@@ -20,7 +20,7 @@ class AuthService {
    * Body:    { email, password }
    */
   async login(credentials: LoginCredentials): Promise<void> {
-    await axiosInstance.post("/auth/login/", credentials);
+    await axiosInstance.post("auth/login/", credentials);
   }
 
   /**
@@ -33,7 +33,7 @@ class AuthService {
    * Endpoint: GET /auth/user/
    */
   async getUser(): Promise<User> {
-    const response = await axiosInstance.get<User>("/auth/user/");
+    const response = await axiosInstance.get<User>("auth/user/");
     return response.data;
   }
 
@@ -44,7 +44,7 @@ class AuthService {
    * Endpoint: POST /auth/logout/
    */
   async logout(): Promise<void> {
-    await axiosInstance.post("/auth/logout/");
+    await axiosInstance.post("auth/logout/");
   }
 
   /**
@@ -55,7 +55,7 @@ class AuthService {
    * Endpoint: POST /auth/token/refresh/
    */
   async refreshToken(): Promise<void> {
-    await axiosInstance.post("/auth/token/refresh/");
+    await axiosInstance.post("auth/token/refresh/");
   }
 }
 

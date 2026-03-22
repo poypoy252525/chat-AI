@@ -30,7 +30,7 @@ npm run build
 # 4. Restart Services (Crucial!)
 # You likely need to restart Gunicorn/Uvicorn and maybe Nginx
 echo "🔄 Restarting services..."
-# sudo systemctl restart gunicorn   # Replace with your actual service name
-# sudo systemctl restart nginx      # If Nginx needs a reload
+sudo systemctl restart gunicorn   # Replace with your actual service name
+sudo systemctl restart nginx      # If Nginx needs a reload
 
 echo "✅ Deployment finished successfully!"

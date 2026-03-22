@@ -12,8 +12,11 @@ import type { AxiosRequestConfig } from "axios";
 //       CORS_ALLOW_CREDENTIALS = True
 //       CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]  # your frontend URL
 // ---------------------------------------------------------------------------
+const apiURL = import.meta.env.VITE_API_URL || "";
+const baseURL = apiURL.endsWith("/") ? apiURL : `${apiURL}/`;
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -51,7 +54,7 @@ axiosInstance.interceptors.response.use(
 
       try {
         // The refresh token cookie is sent automatically by the browser
-        await axiosInstance.post("/auth/token/refresh/");
+        await axiosInstance.post("auth/token/refresh/");
 
         // Retry the original request — the new access-token cookie is now set
         return axiosInstance(originalRequest);

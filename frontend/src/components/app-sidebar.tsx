@@ -25,8 +25,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   useEffect(() => {
     const fetchChatHistory = async () => {
-      const data = await chatService.getChatHistory();
-      setChatHistory(data.results);
+      try {
+        const data = await chatService.getChatHistory();
+        setChatHistory(data?.results || []);
+      } catch (error) {
+        console.error("Failed to fetch chat history:", error);
+        setChatHistory([]);
+      }
     };
     fetchChatHistory();
   }, []);

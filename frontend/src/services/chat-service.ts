@@ -32,14 +32,14 @@ class ChatService {
 
   async getChatHistory(): Promise<PaginatedResponse<Conversation>> {
     const response = await this.apiClient.get<PaginatedResponse<Conversation>>(
-      "/chat/conversations/",
+      "chat/conversations/",
     );
     return response.data;
   }
 
   async sendMessage(message: string): Promise<Conversation> {
     const response = await this.apiClient.post<Conversation>(
-      "/chat/conversations/",
+      "chat/conversations/",
       {
         message,
       },
