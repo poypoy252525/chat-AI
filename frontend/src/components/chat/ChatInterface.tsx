@@ -1,15 +1,14 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useChat } from "@/hooks/useChat";
 import { cn } from "@/lib/utils";
+import type { ImageAttachment } from "@/types/chat";
 import { AlertCircle, MessageSquare, RefreshCw } from "lucide-react";
-import { memo, useEffect, useRef, useCallback, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ChatInput } from "./ChatInput";
 import { MessageBubble } from "./MessageBubble";
-import chatService from "@/services/chat-service";
-import type { ImageAttachment } from "@/types/chat";
 
 interface ChatInterfaceProps {
   className?: string;
@@ -38,14 +37,14 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
       initialMessage?: string;
       initialImages?: ImageAttachment[];
     } | null;
-    
+
     // Check if we have an initial message and it's for this specific conversation
     // and we haven't already triggered it for this ID.
     if (
-      state?.initialMessage && 
-      conversationId && 
+      state?.initialMessage &&
+      conversationId &&
       initialSendTriggered.current !== conversationId &&
-      messages.length === 0 && 
+      messages.length === 0 &&
       !isLoading
     ) {
       initialSendTriggered.current = conversationId;
@@ -53,7 +52,15 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
       // Clear state so it doesn't refire on internal component updates or refreshes
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [conversationId, messages.length, isLoading, location.state, sendMessage, navigate, location.pathname]);
+  }, [
+    conversationId,
+    messages.length,
+    isLoading,
+    location.state,
+    sendMessage,
+    navigate,
+    location.pathname,
+  ]);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -200,7 +207,9 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
                 isLoading && conversationId ? (
                   <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center px-4">
                     <RefreshCw className="h-8 w-8 text-primary animate-spin mb-4" />
-                    <p className="text-muted-foreground">Loading conversation...</p>
+                    <p className="text-muted-foreground">
+                      Loading conversation...
+                    </p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center px-4">
