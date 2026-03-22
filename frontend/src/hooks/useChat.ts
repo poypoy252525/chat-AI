@@ -42,13 +42,20 @@ export const useChat = (conversationId?: string): ChatHook => {
   // Fetch conversation history if ID is provided
   useEffect(() => {
     const fetchHistory = async () => {
-      // Don't refetch if we just fetched for this ID
-      // or if we just CREATED this ID and already have messages
-      if (!conversationId || lastFetchedId.current === conversationId || (messages.length > 0 && lastFetchedId.current === null)) {
-        if (!conversationId) {
+      // If we switched to a different conversation, clear messages and fetch
+      if (conversationId && lastFetchedId.current !== conversationId) {
+        // Only clear if we aren't in the middle of a silent creation
+        // (we just created it if lastFetchedId is null and we have messages)
+        const isSilentCreation = lastFetchedId.current === null && messages.length > 0;
+        if (!isSilentCreation) {
           setMessages([]);
-          lastFetchedId.current = null;
+          setError(null);
         }
+      } else if (!conversationId) {
+        setMessages([]);
+        lastFetchedId.current = null;
+        return;
+      } else if (lastFetchedId.current === conversationId) {
         return;
       }
 
