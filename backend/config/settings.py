@@ -25,6 +25,7 @@ env = environ.Env(
     DB_PASSWORD=(str),
     DB_HOST=(str),
     DB_PORT=(str),
+    CORS_ALLOWED_ORIGINS=(list, ["http://localhost:5173"]),
 )
 
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
@@ -196,10 +197,7 @@ AUTH_USER_MODEL = 'core.User'
 # Switch to an explicit allowlist and enable credentials:
 #
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",   # local frontend dev server
-    "https://your-production-domain.com",
-]
+CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS')
 #
 # Remove or comment out the line below once you set CORS_ALLOWED_ORIGINS:
 # CORS_ALLOW_ALL_ORIGINS = True  # ← TODO: replace with CORS_ALLOWED_ORIGINS above
