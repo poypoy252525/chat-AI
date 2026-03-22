@@ -45,7 +45,7 @@ axiosInstance.interceptors.response.use(
 
     const is401 = error.response?.status === 401;
     const isRefreshEndpoint = originalRequest.url?.includes(
-      "/auth/token/refresh/",
+      "auth/token/refresh/",
     );
 
     // Only attempt a refresh once, and never on the refresh endpoint itself
