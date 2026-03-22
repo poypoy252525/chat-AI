@@ -132,31 +132,19 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
   }, [messages.length]);
 
   /**
-   * When at the home route ("/"), intercept the first send:
-   *  1. Call the backend to create a new conversation (returns Conversation with id)
-   *  2. Navigate to /chat/:id  (this remounts ChatInterface with the new id)
-   *  3. The initial message will be handled by the useEffect above
+   * Snappy Message Handling:
+   * 1. On / route, sendMessage will optimistically add the message to the UI.
+   * 2. useChat will create the conversation in the background (silent creation).
+   * 3. Once created, it will trigger the navigation callback.
    */
   const handleSendMessage = useCallback(
     async (content: string, images?: ImageAttachment[]) => {
       if (!content.trim() && !images?.length) return;
 
       if (isHomeRoute) {
-        setIsCreatingConversation(true);
-        try {
-          // Send to backend — creates conversation and returns its id
-          const conversation = await chatService.sendMessage(content);
-          // Navigate to the new conversation with the initial message in state
-          navigate(`/chat/${conversation.id}`, { 
-            replace: true,
-            state: { initialMessage: content, initialImages: images }
-          });
-        } catch (err) {
-          console.error("Failed to create conversation:", err);
-          setIsCreatingConversation(false);
-          // Fall back to local chat so user isn't blocked
-          sendMessage(content, images);
-        }
+        sendMessage(content, images, (newId) => {
+          navigate(`/chat/${newId}`, { replace: true });
+        });
       } else {
         sendMessage(content, images);
       }

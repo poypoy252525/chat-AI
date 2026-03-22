@@ -29,6 +29,7 @@ export const useChat = (conversationId?: string): ChatHook => {
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const llmProvider = useRef<LLMProvider | null>(null);
+  const lastFetchedId = useRef<string | null>(null);
 
   // Initialize LLM provider lazily
   const getLLM = useCallback(() => {
@@ -41,8 +42,13 @@ export const useChat = (conversationId?: string): ChatHook => {
   // Fetch conversation history if ID is provided
   useEffect(() => {
     const fetchHistory = async () => {
-      if (!conversationId) {
-        setMessages([]);
+      // Don't refetch if we just fetched for this ID
+      // or if we just CREATED this ID and already have messages
+      if (!conversationId || lastFetchedId.current === conversationId || (messages.length > 0 && lastFetchedId.current === null)) {
+        if (!conversationId) {
+          setMessages([]);
+          lastFetchedId.current = null;
+        }
         return;
       }
 
@@ -58,8 +64,8 @@ export const useChat = (conversationId?: string): ChatHook => {
           metadata: msg.metadata,
         }));
         
+        lastFetchedId.current = conversationId;
         // Only set the history if we don't have active messages already
-        // (to prevent overwriting a stream that started after the fetch triggered)
         setMessages((prev) => (prev.length === 0 ? history : prev));
       } catch (err) {
         console.error("Failed to fetch message history:", err);
@@ -73,7 +79,11 @@ export const useChat = (conversationId?: string): ChatHook => {
   }, [conversationId]);
 
   const sendMessage = useCallback(
-    async (content: string, images?: ImageAttachment[]) => {
+    async (
+      content: string, 
+      images?: ImageAttachment[],
+      onConversationCreated?: (id: string) => void
+    ) => {
       if ((!content.trim() && !images?.length) || isLoading) return;
 
       const userMessage: Message = {
@@ -93,7 +103,7 @@ export const useChat = (conversationId?: string): ChatHook => {
         isLoading: true,
       };
 
-      // Add user message and loading indicator
+      // Add user message and loading indicator IMMEDIATELY for snappy UX
       setMessages((prev) => [...prev, userMessage, loadingMessage]);
       setIsLoading(true);
       setError(null);
@@ -107,44 +117,44 @@ export const useChat = (conversationId?: string): ChatHook => {
       abortControllerRef.current = abortController;
 
       try {
+        let activeId = conversationId;
+
+        // SILENT CREATION: If no conversationId, create it first in the background
+        if (!activeId) {
+          const conversation = await chatService.sendMessage(userMessage.content);
+          activeId = conversation.id;
+          // Notify the UI to navigate; useChat state will persist through navigation
+          if (onConversationCreated) {
+            onConversationCreated(activeId);
+          }
+        }
+
         const llm = getLLM();
         let accumulatedContent = "";
 
-        // Get all messages up to the current user message for context
-        const conversationHistory = [...messages, userMessage];
-
-        // Convert to LLM message format
-        const llmMessages = conversationHistory.map(convertToLLMMessage);
-
-        // Stream the response from the backend
-        const generator = llm.generateStreamingResponse(llmMessages, {
-          conversationId,
-          signal: abortController.signal,
-        });
+        // Only stream if we have a valid conversationId now
+        const generator = llm.generateStreamingResponse(
+          [convertToLLMMessage(userMessage)], // Just pass the new message or relevant history
+          {
+            conversationId: activeId,
+            signal: abortController.signal,
+          }
+        );
 
         for await (const chunk of generator) {
-          // Check if aborted
-          if (abortController.signal.aborted) {
-            break;
-          }
-
+          if (abortController.signal.aborted) break;
           accumulatedContent += chunk;
 
-          // Update the assistant message with accumulated content
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === assistantMessageId
-                ? {
-                    ...msg,
-                    content: accumulatedContent,
-                    isLoading: false,
-                  }
+                ? { ...msg, content: accumulatedContent, isLoading: false }
                 : msg
             )
           );
         }
 
-        // Final update to ensure loading state is cleared
+        // Ensure loading state is cleared
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMessageId
@@ -161,18 +171,12 @@ export const useChat = (conversationId?: string): ChatHook => {
           (err instanceof Error && (err.name === "AbortError" || err.message?.includes("canceled"))) ||
           (err && typeof err === "object" && "isAxiosError" in err && (err as any).name === "CanceledError")
         ) {
-          // Request was aborted or canceled, don't show error
           return;
         }
 
-        const errorMessage =
-          err instanceof Error ? err.message : "Something went wrong";
+        const errorMessage = err instanceof Error ? err.message : "Something went wrong";
         setError(errorMessage);
-
-        // Remove loading message on error
-        setMessages((prev) =>
-          prev.filter((msg) => msg.id !== assistantMessageId)
-        );
+        setMessages((prev) => prev.filter((msg) => msg.id !== assistantMessageId));
       } finally {
         setIsLoading(false);
         if (abortControllerRef.current === abortController) {
@@ -180,7 +184,7 @@ export const useChat = (conversationId?: string): ChatHook => {
         }
       }
     },
-    [isLoading, getLLM, messages, conversationId]
+    [isLoading, getLLM, conversationId]
   );
 
   const clearChat = useCallback(() => {

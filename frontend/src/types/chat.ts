@@ -25,7 +25,11 @@ export interface ChatState {
 }
 
 export interface ChatActions {
-  sendMessage: (content: string, images?: ImageAttachment[]) => Promise<void>;
+  sendMessage: (
+    content: string,
+    images?: ImageAttachment[],
+    onConversationCreated?: (id: string) => void
+  ) => Promise<void>;
   clearChat: () => void;
   retryLastMessage: () => Promise<void>;
 }
