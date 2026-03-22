@@ -6,7 +6,8 @@ export interface User {
   id: number;
   email: string;
   username: string;
-  // Add any extra fields your User model exposes (e.g. first_name, last_name)
+  first_name: string;
+  last_name: string;
 }
 
 export interface LoginCredentials {
