@@ -4,17 +4,26 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useChat } from "@/hooks/useChat";
 import { cn } from "@/lib/utils";
 import { AlertCircle, MessageSquare, RefreshCw } from "lucide-react";
-import { memo, useEffect, useRef, useCallback } from "react";
+import { memo, useEffect, useRef, useCallback, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ChatInput } from "./ChatInput";
 import { MessageBubble } from "./MessageBubble";
+import chatService from "@/services/chat-service";
+import type { ImageAttachment } from "@/types/chat";
 
 interface ChatInterfaceProps {
   className?: string;
 }
 
 const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
+  const { id: conversationId } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
+  const isHomeRoute = !conversationId;
+
   const { messages, isLoading, error, sendMessage, retryLastMessage } =
     useChat();
+
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -32,7 +41,7 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
     if (!viewport) return false;
 
     const { scrollTop, scrollHeight, clientHeight } = viewport;
-    const threshold = 100; // Increased threshold for better UX
+    const threshold = 100;
     return scrollTop + clientHeight >= scrollHeight - threshold;
   }, []);
 
@@ -49,12 +58,10 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
     const currentScrollTop = viewport.scrollTop;
     const previousScrollTop = lastScrollTopRef.current;
 
-    // If user scrolled up manually (not programmatic), disable auto-scroll
     if (currentScrollTop < previousScrollTop) {
       shouldAutoScrollRef.current = false;
     }
 
-    // If user scrolled to bottom, re-enable auto-scroll
     if (isAtBottom()) {
       shouldAutoScrollRef.current = true;
     }
@@ -77,7 +84,7 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
     }
   }, [handleScroll]);
 
-  // Auto-scroll when new content arrives (simplified logic)
+  // Auto-scroll when new content arrives
   useEffect(() => {
     if (shouldAutoScrollRef.current && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({
@@ -93,6 +100,36 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
       shouldAutoScrollRef.current = true;
     }
   }, [messages.length]);
+
+  /**
+   * When at the home route ("/"), intercept the first send:
+   *  1. Call the backend to create a new conversation (returns Conversation with id)
+   *  2. Navigate to /chat/:id  (this remounts ChatInterface with the new id)
+   *  3. Also fire the local sendMessage so the UI is responsive immediately
+   */
+  const handleSendMessage = useCallback(
+    async (content: string, images?: ImageAttachment[]) => {
+      if (!content.trim() && !images?.length) return;
+
+      if (isHomeRoute) {
+        setIsCreatingConversation(true);
+        try {
+          // Send to backend — creates conversation and returns its id
+          const conversation = await chatService.sendMessage(content);
+          // Navigate to the new conversation; ChatInterface will remount with id
+          navigate(`/chat/${conversation.id}`, { replace: true });
+        } catch (err) {
+          console.error("Failed to create conversation:", err);
+          setIsCreatingConversation(false);
+          // Fall back to local chat so user isn't blocked
+          sendMessage(content, images);
+        }
+      } else {
+        sendMessage(content, images);
+      }
+    },
+    [isHomeRoute, navigate, sendMessage],
+  );
 
   // Error display component
   const ErrorDisplay = memo(() => {
@@ -123,6 +160,8 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
   });
 
   ErrorDisplay.displayName = "ErrorDisplay";
+
+  const busy = isLoading || isCreatingConversation;
 
   return (
     <div
@@ -175,10 +214,10 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
       <div className="bg-background">
         <div className="max-w-3xl mx-auto">
           <ChatInput
-            onSendMessage={sendMessage}
-            disabled={isLoading}
+            onSendMessage={handleSendMessage}
+            disabled={busy}
             className="border-none shadow-none bg-transparent"
-            placeholder={isLoading ? "AI is thinking..." : "Message Chatbot"}
+            placeholder={busy ? "Creating conversation…" : "Message Chatbot"}
           />
         </div>
       </div>

@@ -10,11 +10,11 @@ export default function RootLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <header className="sticky top-0 flex h-16 shrink-0 items-center gap-2 bg-background px-4">
+      <SidebarInset className="flex flex-col h-screen overflow-hidden">
+        <header className="flex h-10 shrink-0 items-center gap-2 px-3">
           <SidebarTrigger className="-ml-1" />
         </header>
-        <main className="flex flex-1 flex-col">
+        <main className="flex flex-1 flex-col overflow-hidden">
           <Outlet />
         </main>
       </SidebarInset>
