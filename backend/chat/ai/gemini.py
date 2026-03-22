@@ -20,8 +20,8 @@ class GeminiClient(BaseAIClient):
         settings: Dict[str, Any]
     ) -> Generator[Dict[str, Any], None, None]:
         
-        # Default model if not provided
-        model = settings.get("model", "gemini-2.5-flash-lite")
+        # Default model from environment or fallback
+        model = settings.get("model") or os.getenv("GEMINI_MODEL_NAME", "gemini-2.0-flash-exp")
         
         # Prepare system instruction
         config_params = {}
@@ -79,7 +79,8 @@ class GeminiClient(BaseAIClient):
         """
         Generates a one-shot response from the AI.
         """
-        model = settings.get("model", "gemini-2.5-flash-lite")
+        model = settings.get("model") or os.getenv("GEMINI_MODEL_NAME", "gemini-2.0-flash-exp")
+
         config_params = {}
         if system_prompt:
             config_params["system_instruction"] = system_prompt

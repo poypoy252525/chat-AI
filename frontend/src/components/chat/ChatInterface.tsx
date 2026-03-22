@@ -251,8 +251,10 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
       <div className="bg-background">
         <div className="max-w-3xl mx-auto">
           <ChatInput
+            key={conversationId || "new"}
             onSendMessage={handleSendMessage}
             disabled={busy}
+            autoFocus
             className="border-none shadow-none bg-transparent"
             placeholder={busy ? "Creating conversation…" : "Message Chatbot"}
           />

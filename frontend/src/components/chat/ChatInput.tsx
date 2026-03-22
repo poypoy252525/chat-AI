@@ -1,4 +1,4 @@
-import { useState, useRef, memo, type KeyboardEvent } from "react";
+import { useState, useRef, memo, useEffect, type KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, X, Image } from "lucide-react";
@@ -10,6 +10,7 @@ interface ChatInputProps {
   disabled?: boolean;
   className?: string;
   placeholder?: string;
+  autoFocus?: boolean;
 }
 
 const ChatInput = memo<ChatInputProps>(
@@ -18,11 +19,19 @@ const ChatInput = memo<ChatInputProps>(
     disabled = false,
     className,
     placeholder = "Message ChatBot...",
+    autoFocus,
   }) => {
     const [message, setMessage] = useState("");
     const [images, setImages] = useState<ImageAttachment[]>([]);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Auto-focus logic
+    useEffect(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, []);
 
     const handleSubmit = () => {
       const trimmedMessage = message.trim();
@@ -146,6 +155,7 @@ const ChatInput = memo<ChatInputProps>(
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={disabled}
+            autoFocus={autoFocus}
             className={cn(
               "min-h-[48px] max-h-[200px] resize-none w-full",
               "px-4 lg:px-6 py-4", // Normal padding for text area

@@ -67,7 +67,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     isActive={location.pathname === `/chat/${conversation.id}`}
                   >
                     <Link to={`/chat/${conversation.id}`}>
-                      {conversation.title}
+                      <span>{conversation.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
