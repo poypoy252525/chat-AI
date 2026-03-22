@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import type { Message, ChatHook, ImageAttachment } from "@/types/chat";
 import type { LLMProvider, LLMMessage } from "@/types/llm";
 import { LLMServiceFactory } from "@/services/llm-registry";
+import chatService from "@/services/chat-service";
 
 // Utility function to generate unique IDs
 const generateId = () =>
@@ -9,7 +10,7 @@ const generateId = () =>
 
 // Convert internal Message type to LLM Message type
 const convertToLLMMessage = (message: Message): LLMMessage => ({
-  role: message.role,
+  role: message.role as "user" | "assistant",
   content: message.content,
   images: message.images?.map((img) => ({
     type: img.type,
@@ -22,7 +23,7 @@ const getLLMProvider = (): LLMProvider => {
   return LLMServiceFactory.createFromEnvironment();
 };
 
-export const useChat = (): ChatHook => {
+export const useChat = (conversationId?: string): ChatHook => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,37 @@ export const useChat = (): ChatHook => {
     }
     return llmProvider.current;
   }, []);
+
+  // Fetch conversation history if ID is provided
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!conversationId) {
+        setMessages([]);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await chatService.getMessages(conversationId);
+        const history: Message[] = response.results.map((msg: any) => ({
+          id: msg.id,
+          content: msg.content,
+          role: msg.role === "assistant" ? "assistant" : "user",
+          timestamp: new Date(msg.created_at),
+          metadata: msg.metadata,
+        }));
+        setMessages(history);
+      } catch (err) {
+        console.error("Failed to fetch message history:", err);
+        setError("Failed to load conversation history.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [conversationId]);
 
   const sendMessage = useCallback(
     async (content: string, images?: ImageAttachment[]) => {
@@ -68,7 +100,8 @@ export const useChat = (): ChatHook => {
         abortControllerRef.current.abort();
       }
 
-      abortControllerRef.current = new AbortController();
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
 
       try {
         const llm = getLLM();
@@ -80,10 +113,15 @@ export const useChat = (): ChatHook => {
         // Convert to LLM message format
         const llmMessages = conversationHistory.map(convertToLLMMessage);
 
-        // Stream the response with full conversation context
-        for await (const chunk of llm.generateStreamingResponse(llmMessages)) {
+        // Stream the response from the backend
+        const generator = llm.generateStreamingResponse(llmMessages, {
+          conversationId,
+          signal: abortController.signal,
+        });
+
+        for await (const chunk of generator) {
           // Check if aborted
-          if (abortControllerRef.current?.signal.aborted) {
+          if (abortController.signal.aborted) {
             break;
           }
 
@@ -131,10 +169,12 @@ export const useChat = (): ChatHook => {
         );
       } finally {
         setIsLoading(false);
-        abortControllerRef.current = null;
+        if (abortControllerRef.current === abortController) {
+          abortControllerRef.current = null;
+        }
       }
     },
-    [isLoading, getLLM, messages]
+    [isLoading, getLLM, messages, conversationId]
   );
 
   const clearChat = useCallback(() => {
@@ -186,26 +226,35 @@ export const useChat = (): ChatHook => {
       abortControllerRef.current.abort();
     }
 
-    abortControllerRef.current = new AbortController();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     try {
       const llm = getLLM();
       let accumulatedContent = "";
 
-      // Get all messages up to the current user message for context (excluding the removed assistant message)
-      const conversationHistory = messages.filter(
-        (msg) =>
-          msg.role === "user" || msg.id !== messages[messages.length - 1]?.id
-      );
-      conversationHistory.push(lastUserMessage);
+      // Get all messages up to the last user message
+      let lastUserIndex = -1;
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === "user") {
+          lastUserIndex = i;
+          break;
+        }
+      }
+      const conversationHistory = messages.slice(0, lastUserIndex + 1);
 
       // Convert to LLM message format
       const llmMessages = conversationHistory.map(convertToLLMMessage);
 
-      // Stream the response with full conversation context
-      for await (const chunk of llm.generateStreamingResponse(llmMessages)) {
+      // Stream the response from the backend
+      const generator = llm.generateStreamingResponse(llmMessages, {
+        conversationId,
+        signal: abortController.signal,
+      });
+
+      for await (const chunk of generator) {
         // Check if aborted
-        if (abortControllerRef.current?.signal.aborted) {
+        if (abortController.signal.aborted) {
           break;
         }
 
@@ -253,9 +302,11 @@ export const useChat = (): ChatHook => {
       );
     } finally {
       setIsLoading(false);
-      abortControllerRef.current = null;
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
     }
-  }, [messages, isLoading, getLLM]);
+  }, [messages, isLoading, getLLM, conversationId]);
 
   return {
     messages,

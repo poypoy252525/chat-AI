@@ -41,8 +41,17 @@ class ChatService {
     const response = await this.apiClient.post<Conversation>(
       "chat/conversations/",
       {
-        message,
+        initial_message: message,
       },
+    );
+    return response.data;
+  }
+
+  async getMessages(
+    conversationId: string,
+  ): Promise<PaginatedResponse<Message>> {
+    const response = await this.apiClient.get<PaginatedResponse<Message>>(
+      `chat/conversations/${conversationId}/messages/`,
     );
     return response.data;
   }

@@ -7,6 +7,7 @@ import type {
 } from "@/types/llm";
 import { GoogleGenAIProvider } from "./providers/google-genai.provider";
 import { OpenAIProvider } from "./providers/openai.provider";
+import { BackendLLMProvider } from "./providers/backend.provider";
 
 /**
  * LLM Provider Registry Implementation
@@ -44,6 +45,9 @@ class LLMProviderRegistryImpl implements LLMProviderRegistry {
    * Register built-in providers
    */
   private registerBuiltInProviders(): void {
+    // Backend Provider (Recommended)
+    this.register("backend", () => new BackendLLMProvider());
+
     // Google GenAI Provider
     this.register(
       "google-genai",
@@ -52,9 +56,6 @@ class LLMProviderRegistryImpl implements LLMProviderRegistry {
 
     // OpenAI Provider
     this.register("openai", (config: LLMConfig) => new OpenAIProvider(config));
-
-    // Additional providers can be registered here
-    // this.register("anthropic", (config: LLMConfig) => new AnthropicProvider(config));
   }
 }
 
@@ -72,7 +73,7 @@ export class LLMServiceFactory {
    */
   static createFromEnvironment(): LLMProvider {
     const providerType =
-      (import.meta.env.VITE_LLM_PROVIDER as LLMProviderType) || "google-genai";
+      (import.meta.env.VITE_LLM_PROVIDER as LLMProviderType) || "backend";
 
     const config = LLMServiceFactory.getConfigForProvider(providerType);
 
@@ -91,6 +92,9 @@ export class LLMServiceFactory {
    */
   private static getConfigForProvider(type: LLMProviderType): LLMConfig {
     switch (type) {
+      case "backend":
+        return { apiKey: "" }; // No API key needed for backend provider
+
       case "google-genai":
         return {
           apiKey: import.meta.env.VITE_GENAI_KEY || "",

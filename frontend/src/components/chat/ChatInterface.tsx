@@ -5,7 +5,7 @@ import { useChat } from "@/hooks/useChat";
 import { cn } from "@/lib/utils";
 import { AlertCircle, MessageSquare, RefreshCw } from "lucide-react";
 import { memo, useEffect, useRef, useCallback, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ChatInput } from "./ChatInput";
 import { MessageBubble } from "./MessageBubble";
 import chatService from "@/services/chat-service";
@@ -21,9 +21,29 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
   const isHomeRoute = !conversationId;
 
   const { messages, isLoading, error, sendMessage, retryLastMessage } =
-    useChat();
+    useChat(conversationId);
 
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+  const location = useLocation();
+
+  // Reset loading state when conversation ID changes
+  useEffect(() => {
+    setIsCreatingConversation(false);
+  }, [conversationId]);
+
+  // Handle initial message from navigation state
+  useEffect(() => {
+    const state = location.state as {
+      initialMessage?: string;
+      initialImages?: ImageAttachment[];
+    } | null;
+    
+    if (state?.initialMessage && conversationId && messages.length === 0 && !isLoading) {
+      sendMessage(state.initialMessage, state.initialImages);
+      // Clear state so it doesn't refire on internal component updates
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [conversationId, messages.length, isLoading, location.state, sendMessage, navigate, location.pathname]);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -105,7 +125,7 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
    * When at the home route ("/"), intercept the first send:
    *  1. Call the backend to create a new conversation (returns Conversation with id)
    *  2. Navigate to /chat/:id  (this remounts ChatInterface with the new id)
-   *  3. Also fire the local sendMessage so the UI is responsive immediately
+   *  3. The initial message will be handled by the useEffect above
    */
   const handleSendMessage = useCallback(
     async (content: string, images?: ImageAttachment[]) => {
@@ -116,8 +136,11 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
         try {
           // Send to backend — creates conversation and returns its id
           const conversation = await chatService.sendMessage(content);
-          // Navigate to the new conversation; ChatInterface will remount with id
-          navigate(`/chat/${conversation.id}`, { replace: true });
+          // Navigate to the new conversation with the initial message in state
+          navigate(`/chat/${conversation.id}`, { 
+            replace: true,
+            state: { initialMessage: content, initialImages: images }
+          });
         } catch (err) {
           console.error("Failed to create conversation:", err);
           setIsCreatingConversation(false);

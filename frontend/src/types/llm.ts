@@ -18,10 +18,16 @@ export interface LLMProvider {
   /**
    * Generate streaming response from the LLM
    * @param messages - Conversation history
+   * @param options - Additional options like conversationId
    * @returns AsyncGenerator yielding text chunks
    */
   generateStreamingResponse(
-    messages: LLMMessage[]
+    messages: LLMMessage[],
+    options?: {
+      conversationId?: string;
+      signal?: AbortSignal;
+      [key: string]: any;
+    }
   ): AsyncGenerator<string, void, unknown>;
 
   /**
@@ -46,6 +52,7 @@ export type LLMProviderType =
   | "google-genai"
   | "openai"
   | "anthropic"
+  | "backend"
   | "custom";
 
 /**
