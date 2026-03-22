@@ -1,7 +1,5 @@
 import * as React from "react";
 
-import { SearchForm } from "@/components/search-form";
-import { VersionSwitcher } from "@/components/version-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -14,78 +12,66 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-
-// This is sample data.
-interface NavItem {
-  title: string;
-  url: string;
-  isActive?: boolean;
-}
-
-interface NavGroup {
-  title?: string;
-  url: string;
-  items: NavItem[];
-}
-
-const data: {
-  versions: string[];
-  navMain: NavGroup[];
-} = {
-  versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
-  navMain: [
-    {
-      url: "#",
-      items: [
-        {
-          title: "New chat",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Chat History",
-      url: "#",
-      items: [
-        {
-          title: "How to build a chat app",
-          url: "#",
-        },
-        {
-          title: "React vs Vue in 2024",
-          url: "#",
-          isActive: true,
-        },
-        {
-          title: "Deep learning tutorial",
-          url: "#",
-        },
-        {
-          title: "Best pizza in Rome",
-          url: "#",
-        },
-        {
-          title: "TypeScript advanced patterns",
-          url: "#",
-        },
-      ],
-    },
-  ],
-};
+import chatService, { type Conversation } from "@/services/chat-service";
+import { SquarePen } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { VersionSwitcher } from "./version-switcher";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [chatHistory, setChatHistory] = useState<Conversation[]>([]);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      const data = await chatService.getChatHistory();
+      setChatHistory(data.results);
+    };
+    fetchChatHistory();
+  }, []);
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <VersionSwitcher
-          versions={data.versions}
-          defaultVersion={data.versions[0]}
-        />
-        <SearchForm />
+        <VersionSwitcher />
       </SidebarHeader>
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/">
+                    <SquarePen />
+                    <span>New Chat</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Chat History</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {chatHistory.map((conversation) => (
+                <SidebarMenuItem key={conversation.id}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === `/chat/${conversation.id}`}
+                  >
+                    <Link to={`/chat/${conversation.id}`}>
+                      {conversation.title}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         {/* We create a SidebarGroup for each parent. */}
-        {data.navMain.map((group) => (
+        {/* {data.navMain.map((group) => (
           <SidebarGroup key={group.title || group.url}>
             {group.title && (
               <SidebarGroupLabel className="font-bold">
@@ -104,7 +90,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        ))}
+        ))} */}
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

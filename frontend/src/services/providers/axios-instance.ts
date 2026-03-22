@@ -17,7 +17,7 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // send cookies on every request
+  withCredentials: true,
 });
 
 // ---------------------------------------------------------------------------
@@ -42,7 +42,7 @@ axiosInstance.interceptors.response.use(
 
     const is401 = error.response?.status === 401;
     const isRefreshEndpoint = originalRequest.url?.includes(
-      "/auth/token/refresh/"
+      "/auth/token/refresh/",
     );
 
     // Only attempt a refresh once, and never on the refresh endpoint itself
@@ -64,7 +64,7 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;

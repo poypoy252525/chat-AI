@@ -37,7 +37,7 @@ export const routes = createBrowserRouter([
         ),
         children: [
           {
-            index: true,
+            path: "chat/:id",
             element: <ChatInterface />,
           },
         ],

@@ -9,7 +9,7 @@ messages_router = NestedDefaultRouter(router, r'conversations', lookup='conversa
 messages_router.register(r'messages', MessageViewSet, basename='conversation-messages')
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('', include(messages_router.urls)),
+    path(r'chat/', include(router.urls)),
+    path(r'chat/', include(messages_router.urls)),
 ]
 
