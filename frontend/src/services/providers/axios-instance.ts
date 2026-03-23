@@ -24,6 +24,33 @@ const axiosInstance = axios.create({
 });
 
 // ---------------------------------------------------------------------------
+// Concurrent Refresh Handling
+//
+// If multiple requests fail with a 401 at once (e.g., on page load), we only
+// want to trigger ONE refresh call. The others should "wait" and then retry.
+// ---------------------------------------------------------------------------
+interface AxiosRequestConfigExtended extends AxiosRequestConfig {
+  _retry?: boolean;
+}
+
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value: any) => void;
+  reject: (reason: any) => void;
+}> = [];
+
+const processQueue = (error: any = null) => {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve(null);
+    }
+  });
+  failedQueue = [];
+};
+
+// ---------------------------------------------------------------------------
 // 401 Interceptor — silent token refresh + retry
 //
 // When any request comes back with a 401 (access token expired), we:
@@ -35,33 +62,45 @@ const axiosInstance = axios.create({
 // the retry itself returns a 401.
 // ---------------------------------------------------------------------------
 axiosInstance.interceptors.response.use(
-  // Any 2xx response passes straight through
   (response) => response,
-
   async (error) => {
-    const originalRequest = error.config as AxiosRequestConfig & {
-      _retry?: boolean;
-    };
+    const originalRequest = error.config as AxiosRequestConfigExtended;
 
-    const is401 = error.response?.status === 401;
+    // Handle network errors (no response)
+    if (!error.response) {
+      return Promise.reject(error);
+    }
+
+    const is401 = error.response.status === 401;
     const isRefreshEndpoint = originalRequest.url?.includes(
       "auth/token/refresh/",
     );
 
-    // Only attempt a refresh once, and never on the refresh endpoint itself
     if (is401 && !originalRequest._retry && !isRefreshEndpoint) {
+      if (isRefreshing) {
+        // If a refresh is already in progress, wait for it to complete
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            return axiosInstance(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
-        // The refresh token cookie is sent automatically by the browser
         await axiosInstance.post("auth/token/refresh/");
-
-        // Retry the original request — the new access-token cookie is now set
+        isRefreshing = false;
+        processQueue(); // Release all waiting requests
         return axiosInstance(originalRequest);
-      } catch {
-        // Refresh also failed — just reject and let the caller handle it.
-        // AuthContext will catch this, set user = null, and ProtectedRoute
-        // will redirect to /login via React Router (no hard page reload).
+      } catch (refreshError) {
+        isRefreshing = false;
+        processQueue(refreshError);
         return Promise.reject(error);
       }
     }

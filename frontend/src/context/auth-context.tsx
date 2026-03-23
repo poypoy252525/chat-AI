@@ -46,12 +46,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // -------------------------------------------------------------------------
   const login = useCallback(
     async (email: string, password: string) => {
-      await authService.login({ email, password });
+      const loginData = await authService.login({ email, password });
 
-      // Fetch the authenticated user after a successful login so we can
-      // populate our state without parsing the token ourselves
-      const currentUser = await authService.getUser();
-      setUser(currentUser);
+      // If the backend returns the user object in the login response (standard for dj-rest-auth),
+      // we can set it immediately. Otherwise, we'll try to fetch it.
+      if (loginData.user) {
+        setUser(loginData.user);
+      } else {
+        const currentUser = await authService.getUser();
+        setUser(currentUser);
+      }
 
       navigate("/");
     },

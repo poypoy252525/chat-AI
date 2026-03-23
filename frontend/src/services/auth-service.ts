@@ -19,8 +19,9 @@ class AuthService {
    * Endpoint: POST /auth/login/
    * Body:    { email, password }
    */
-  async login(credentials: LoginCredentials): Promise<void> {
-    await axiosInstance.post("auth/login/", credentials);
+  async login(credentials: LoginCredentials): Promise<any> {
+    const response = await axiosInstance.post("auth/login/", credentials);
+    return response.data;
   }
 
   /**

@@ -10,7 +10,7 @@ export default function RootLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex flex-col h-screen overflow-hidden">
+      <SidebarInset className="flex flex-col h-dvh overflow-hidden">
         <header className="flex h-14 shrink-0 items-center gap-2 px-3">
           <SidebarTrigger className="-ml-1" />
         </header>
