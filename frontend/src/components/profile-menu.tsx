@@ -39,7 +39,7 @@ export function VersionSwitcher() {
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <GalleryVerticalEnd className="size-4" />
               </div>
-              <div className="flex flex-col gap-0.5 leading-none">
+              <div className="flex flex-col gap-0.5">
                 <span className="font-medium truncate">{displayName}</span>
                 {/* {user && (
                   <span className="text-xs text-muted-foreground truncate">
