@@ -20,7 +20,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-export function VersionSwitcher() {
+export function ProfileMenu() {
   const { user, logout } = useAuth();
 
   const displayName = user

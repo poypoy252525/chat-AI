@@ -16,7 +16,7 @@ import chatService, { type Conversation } from "@/services/chat-service";
 import { SquarePen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { VersionSwitcher } from "./version-switcher";
+import { ProfileMenu } from "@/components/profile-menu";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [chatHistory, setChatHistory] = useState<Conversation[]>([]);
@@ -39,7 +39,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <VersionSwitcher />
+        <ProfileMenu />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
