@@ -202,6 +202,6 @@ CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS')
 # Remove or comment out the line below once you set CORS_ALLOWED_ORIGINS:
 # CORS_ALLOW_ALL_ORIGINS = True  # ← TODO: replace with CORS_ALLOWED_ORIGINS above
 
-
+ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]

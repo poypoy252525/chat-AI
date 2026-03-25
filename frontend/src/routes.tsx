@@ -1,10 +1,10 @@
-import { createBrowserRouter, Outlet } from "react-router-dom";
-import LoginPage from "./pages/login-page";
+import { createBrowserRouter } from "react-router-dom";
+import App from "./App";
 import { ChatInterface } from "./components/chat";
-import { AuthProvider } from "./context/auth-context";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import RootLayout from "./root-layout";
+import LoginPage from "./pages/login-page";
 import SignupPage from "./pages/signup-page";
+import RootLayout from "./root-layout";
 
 // ---------------------------------------------------------------------------
 // AuthLayout — wraps all routes with AuthProvider.
@@ -12,18 +12,11 @@ import SignupPage from "./pages/signup-page";
 // AuthProvider lives here (not in main.tsx) because it uses useNavigate,
 // which requires a router context to already be mounted above it.
 // ---------------------------------------------------------------------------
-function AuthLayout() {
-  return (
-    <AuthProvider>
-      <Outlet />
-    </AuthProvider>
-  );
-}
 
 export const routes = createBrowserRouter([
   {
     // All routes share the same AuthProvider via this layout
-    element: <AuthLayout />,
+    element: <App />,
     children: [
       {
         path: "/login",

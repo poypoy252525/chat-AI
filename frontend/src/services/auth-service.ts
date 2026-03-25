@@ -1,5 +1,5 @@
 import axiosInstance from "./providers/axios-instance";
-import type { LoginCredentials, User } from "@/types/auth";
+import type { LoginCredentials, SignupCredentials, User } from "@/types/auth";
 
 // ---------------------------------------------------------------------------
 // Auth Service
@@ -22,6 +22,17 @@ class AuthService {
   async login(credentials: LoginCredentials): Promise<any> {
     const response = await axiosInstance.post("auth/login/", credentials);
     return response.data;
+  }
+
+  async signup(credentials: SignupCredentials): Promise<any> {
+    const response = await axiosInstance.post(
+      "auth/registration/",
+      credentials,
+    );
+    if (response.status === 201) {
+      return response.data;
+    }
+    throw new Error("Failed to sign up");
   }
 
   /**

@@ -1,9 +1,14 @@
-import { ChatInterface } from "@/components/chat";
+import { Outlet } from "react-router-dom";
+import { AuthProvider } from "./context/auth-context";
+import { Toaster } from "sonner";
 
 function App() {
   return (
     <div className="h-full bg-background overflow-hidden">
-      <ChatInterface />
+      <AuthProvider>
+        <Outlet />
+      </AuthProvider>
+      <Toaster />
     </div>
   );
 }
