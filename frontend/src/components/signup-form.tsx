@@ -19,8 +19,9 @@ import { Link } from "react-router-dom";
 import z from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import authService from "@/services/auth-service";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 
 const signupSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters long"),
@@ -35,6 +36,7 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { signup } = useAuth();
   const form = useForm({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -59,7 +61,7 @@ export function SignupForm({
     }
 
     try {
-      await authService.signup(data);
+      await signup(data);
     } catch (error) {
       toast.error("Error signing up", {
         description: "Please try again",
@@ -171,7 +173,14 @@ export function SignupForm({
                 </Field>
               </Field>
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting && (
+                    <Loader2 className="animate-spin" />
+                  )}
+                  {form.formState.isSubmitting
+                    ? "Creating Account..."
+                    : "Create Account"}
+                </Button>
                 <FieldDescription className="text-center">
                   Already have an account? <Link to="/login">Sign in</Link>
                 </FieldDescription>

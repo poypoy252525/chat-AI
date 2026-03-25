@@ -20,6 +20,7 @@ export interface AuthContextType {
   isLoading: boolean; // true while the initial session check is in-flight
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (credentials: SignupCredentials) => Promise<void>;
   logout: () => Promise<void>;
 }
 

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'dj_rest_auth',
+    'dj_rest_auth.registration',
 
     'allauth',
     'allauth.account',
@@ -167,6 +168,8 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+
+SITE_ID = 1
 
 
 # Internationalization

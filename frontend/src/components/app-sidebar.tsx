@@ -56,7 +56,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        {chatHistory.length && (
+        {chatHistory.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel>Chat History</SidebarGroupLabel>
             <SidebarGroupContent>

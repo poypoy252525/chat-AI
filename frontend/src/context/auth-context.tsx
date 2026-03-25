@@ -63,6 +63,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   // -------------------------------------------------------------------------
+  // signup — POST credentials, then fetch the user object
+  // -------------------------------------------------------------------------
+  const signup = useCallback(
+    async (credentials: any) => {
+      const signupData = await authService.signup(credentials);
+
+      // If the backend returns the user object in the response, set it
+      if (signupData.user) {
+        setUser(signupData.user);
+      } else {
+        const currentUser = await authService.getUser();
+        setUser(currentUser);
+      }
+
+      navigate("/");
+    },
+    [navigate]
+  );
+
+  // -------------------------------------------------------------------------
   // logout — tell the backend to blacklist the refresh token and clear cookies
   // -------------------------------------------------------------------------
   const logout = useCallback(async () => {
@@ -76,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     isAuthenticated: user !== null,
     login,
+    signup,
     logout,
   };
 
