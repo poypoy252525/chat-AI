@@ -32,4 +32,13 @@ class Message(models.Model):
     metadata = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class MessageAttachment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='attachments')
+    file = models.ImageField(upload_to='attachments/%Y/%m/%d/')
+    file_type = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
     

@@ -1,15 +1,22 @@
 from rest_framework import serializers
-from .models import Conversation, Message
+from .models import Conversation, Message, MessageAttachment
 from .services.summary_service import SummaryService
 
 class ImageSerializer(serializers.Serializer):
     type = serializers.CharField()
     data = serializers.CharField() # base64 string
 
+class MessageAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MessageAttachment
+        fields = ['id', 'file', 'file_type', 'created_at']
+
 class MessageSerializer(serializers.ModelSerializer):
+    attachments = MessageAttachmentSerializer(many=True, read_only=True)
+
     class Meta:
         model = Message
-        fields = ['id', 'role', 'content', 'metadata', 'created_at', 'updated_at']
+        fields = ['id', 'role', 'content', 'attachments', 'metadata', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 class ConversationSerializer(serializers.ModelSerializer):

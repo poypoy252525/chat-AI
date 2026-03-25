@@ -44,17 +44,18 @@ class GeminiClient(BaseAIClient):
             if msg.get("content"):
                 parts.append(types.Part.from_text(text=msg["content"]))
             
-            # Add image parts if they exist
-            if "images" in msg and msg["images"]:
-                for img in msg["images"]:
+            # Add attachment parts (read from disk) if they exist
+            if "attachments" in msg and msg["attachments"]:
+                for att in msg["attachments"]:
                     try:
-                        image_data = base64.b64decode(img["data"])
+                        with open(att["path"], "rb") as f:
+                            image_data = f.read()
                         parts.append(types.Part.from_bytes(
                             data=image_data,
-                            mime_type=img["type"]
+                            mime_type=att["type"]
                         ))
                     except Exception as e:
-                        print(f"Error decoding image: {e}")
+                        print(f"Error reading attachment from disk: {e}")
             
             if parts:
                 gemini_contents.append(types.Content(role=role, parts=parts))
@@ -67,13 +68,11 @@ class GeminiClient(BaseAIClient):
             )
             
             # We want to yield back plain text chunks to be SSE serialized
-            # Plus extract usage metadata from the final chunks if possible
             for chunk in response_stream:
                 if chunk.text:
                     yield {"text": chunk.text, "metadata": None}
                 
-                # Check for metadata/finish reason in the chunk
-                # In standard usage, the last chunk contains usage metadata
+                # Check for usage metadata
                 if chunk.usage_metadata:
                     yield {
                         "text": "", 
@@ -85,7 +84,6 @@ class GeminiClient(BaseAIClient):
                         }
                     }
         except Exception as e:
-            # Handle API errors gracefully or yield an error chunk if appropriate
             yield {"text": f"\n\n[Error from Gemini API: {str(e)}]", "error": True, "metadata": None}
 
     def generate_content(
@@ -114,17 +112,18 @@ class GeminiClient(BaseAIClient):
             if msg.get("content"):
                 parts.append(types.Part.from_text(text=msg["content"]))
             
-            # Add image parts if they exist
-            if "images" in msg and msg["images"]:
-                for img in msg["images"]:
+            # Add attachment parts (read from disk)
+            if "attachments" in msg and msg["attachments"]:
+                for att in msg["attachments"]:
                     try:
-                        image_data = base64.b64decode(img["data"])
+                        with open(att["path"], "rb") as f:
+                            image_data = f.read()
                         parts.append(types.Part.from_bytes(
                             data=image_data,
-                            mime_type=img["type"]
+                            mime_type=att["type"]
                         ))
                     except Exception as e:
-                        print(f"Error decoding image: {e}")
+                        print(f"Error reading attachment from disk: {e}")
             
             if parts:
                 gemini_contents.append(types.Content(role=role, parts=parts))

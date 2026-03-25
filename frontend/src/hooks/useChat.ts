@@ -69,6 +69,11 @@ export const useChat = (conversationId?: string): ChatHook => {
           role: msg.role === "assistant" ? "assistant" : "user",
           timestamp: new Date(msg.created_at),
           metadata: msg.metadata,
+          images: msg.attachments?.map((att: any) => ({
+            id: att.id,
+            url: att.file,
+            type: att.file_type,
+          })),
         }));
         
         lastFetchedId.current = conversationId;
