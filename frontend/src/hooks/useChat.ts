@@ -63,6 +63,7 @@ export const useChat = (conversationId?: string): ChatHook => {
       setError(null);
       try {
         const response = await chatService.getMessages(conversationId);
+        const apiBase = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000';
         const history: Message[] = response.results.map((msg: any) => ({
           id: msg.id,
           content: msg.content,
@@ -71,7 +72,7 @@ export const useChat = (conversationId?: string): ChatHook => {
           metadata: msg.metadata,
           images: msg.attachments?.map((att: any) => ({
             id: att.id,
-            url: att.file,
+            url: att.file.startsWith('http') ? att.file : `${apiBase}${att.file}`,
             type: att.file_type,
           })),
         }));
