@@ -56,25 +56,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Chat History</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {chatHistory.map((conversation) => (
-                <SidebarMenuItem key={conversation.id}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === `/chat/${conversation.id}`}
-                  >
-                    <Link to={`/chat/${conversation.id}`}>
-                      <span>{conversation.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {chatHistory.length && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Chat History</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {chatHistory.map((conversation) => (
+                  <SidebarMenuItem key={conversation.id}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={
+                        location.pathname === `/chat/${conversation.id}`
+                      }
+                    >
+                      <Link to={`/chat/${conversation.id}`}>
+                        <span>{conversation.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
         {/* We create a SidebarGroup for each parent. */}
         {/* {data.navMain.map((group) => (
           <SidebarGroup key={group.title || group.url}>
