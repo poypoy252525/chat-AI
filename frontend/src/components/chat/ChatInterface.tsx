@@ -199,10 +199,10 @@ const ChatInterface = memo<ChatInterfaceProps>(({ className }) => {
       )}
     >
       {/* Messages Area */}
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea ref={scrollAreaRef} className="h-full">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex flex-col gap-2 p-3 sm:p-4 lg:p-6">
+      <div className="flex-1 overflow-hidden w-full">
+        <ScrollArea ref={scrollAreaRef} className="h-full w-full">
+          <div className="max-w-3xl mx-auto w-full overflow-x-hidden">
+            <div className="flex flex-col gap-2 p-3 sm:p-4 lg:p-6 w-full">
               {messages.length === 0 ? (
                 isLoading && conversationId ? (
                   <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center px-4">

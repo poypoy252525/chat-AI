@@ -21,7 +21,7 @@ const MarkdownRenderer = memo<MarkdownRendererProps>(
     return (
       <div
         className={cn(
-          "markdown-content prose prose-sm max-w-none dark:prose-invert prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none",
+          "markdown-content prose prose-sm max-w-none dark:prose-invert prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none w-full break-words",
           className
         )}
       >
@@ -41,7 +41,7 @@ const MarkdownRenderer = memo<MarkdownRendererProps>(
             // Custom code block component
             pre: ({ children, ...props }) => (
               <pre
-                className="bg-muted border border-border rounded-lg p-3 overflow-x-auto text-sm my-3"
+                className="bg-muted border border-border rounded-lg p-3 overflow-x-auto text-sm my-3 max-w-full w-full scrollbar-thin"
                 {...props}
               >
                 {children}
@@ -93,18 +93,18 @@ const MarkdownRenderer = memo<MarkdownRendererProps>(
             ),
             // Custom list components
             ul: ({ children, ...props }) => (
-              <ul className="my-2 space-y-1" {...props}>
+              <ul className="my-2 space-y-1 w-full" {...props}>
                 {children}
               </ul>
             ),
             ol: ({ children, ...props }) => (
-              <ol className="list-decimal pl-4 my-2 space-y-1" {...props}>
+              <ol className="list-decimal pl-4 my-2 space-y-1 w-full" {...props}>
                 {children}
               </ol>
             ),
             li: ({ children, ...props }) => (
               <li
-                className="text-sm leading-relaxed relative pl-4 before:content-['•'] before:absolute before:left-0 before:text-foreground before:font-bold"
+                className="text-sm leading-relaxed relative pl-4 before:content-['•'] before:absolute before:left-0 before:text-foreground before:font-bold break-words"
                 {...props}
               >
                 {children}

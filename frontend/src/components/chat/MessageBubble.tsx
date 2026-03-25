@@ -77,9 +77,9 @@ const MessageBubble = memo<MessageBubbleProps>(
       // User message layout - aligned to the right
       return (
         <div className={cn("group w-full flex justify-end", className)}>
-          <div className="flex gap-3 px-3 py-2 sm:px-6 max-w-[87%] lg:max-w-[80%]">
+          <div className="flex gap-3 px-3 py-2 sm:px-6 max-w-[87%] lg:max-w-[80%] w-full">
             {/* Message Content */}
-            <div className="space-y-2 overflow-hidden w-full">
+            <div className="space-y-2 overflow-hidden min-w-0 flex-1 w-0">
               {/* Images */}
               {message.images && message.images.length > 0 && (
                 <div className="flex flex-wrap gap-2 justify-end">
@@ -141,7 +141,7 @@ const MessageBubble = memo<MessageBubbleProps>(
     // Assistant message layout - aligned to the left
     return (
       <div className={cn("group w-full", className)}>
-        <div className="flex gap-3 sm:gap-4 px-3 py-3 sm:px-6 max-w-[95%] sm:max-w-[85%]">
+        <div className="flex gap-3 sm:gap-4 px-3 py-3 sm:px-6 max-w-[95%] sm:max-w-[85%] w-full">
           {/* Avatar */}
           <Avatar className="h-8 w-8 shrink-0">
             <AvatarFallback className="bg-muted text-muted-foreground">
@@ -150,7 +150,7 @@ const MessageBubble = memo<MessageBubbleProps>(
           </Avatar>
 
           {/* Message Content */}
-          <div className="flex-1 space-y-2 overflow-hidden">
+          <div className="flex-1 space-y-2 overflow-hidden min-w-0 w-0 scrollbar-thin">
             {isLoading ? (
               <LoadingDots />
             ) : (
