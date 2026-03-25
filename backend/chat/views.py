@@ -53,6 +53,7 @@ class MessageViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         
         user_text = serializer.validated_data['content']
+        images = serializer.validated_data.get('images', [])
         settings = serializer.validated_data.get('settings', {})
         
         # message_service encapsulates all the logic and returns a generator
@@ -60,6 +61,7 @@ class MessageViewSet(ModelViewSet):
             conversation_id=conversation_pk,
             user=request.user,
             user_text=user_text,
+            images=images,
             settings=settings
         )
         

@@ -128,7 +128,13 @@ export const useChat = (conversationId?: string): ChatHook => {
 
         // SILENT CREATION: If no conversationId, create it first in the background
         if (!activeId) {
-          const conversation = await chatService.sendMessage(userMessage.content);
+          const conversation = await chatService.sendMessage(
+            userMessage.content,
+            userMessage.images?.map((img) => ({
+              type: img.type,
+              data: img.base64,
+            }))
+          );
           activeId = conversation.id;
           // Notify the UI to navigate; useChat state will persist through navigation
           if (onConversationCreated) {

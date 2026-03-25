@@ -37,11 +37,15 @@ class ChatService {
     return response.data;
   }
 
-  async sendMessage(message: string): Promise<Conversation> {
+  async sendMessage(
+    message: string,
+    images?: { type: string; data: string }[],
+  ): Promise<Conversation> {
     const response = await this.apiClient.post<Conversation>(
       "chat/conversations/",
       {
         initial_message: message,
+        images: images,
       },
     );
     return response.data;

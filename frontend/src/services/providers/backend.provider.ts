@@ -42,6 +42,7 @@ export class BackendLLMProvider implements LLMProvider {
         url,
         {
           content: lastMessage.content,
+          images: lastMessage.images,
           settings: {
             provider: "gemini", // Default or from options
             ...options

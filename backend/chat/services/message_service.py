@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Any, Generator
+from typing import Dict, Any, Generator, List
 from rest_framework.exceptions import NotFound
 from ..models import Conversation, Message
 from ..ai.factory import get_ai_client
@@ -10,6 +10,7 @@ class MessageService:
         conversation_id: str,
         user: Any,
         user_text: str,
+        images: List[Dict[str, Any]],
         settings: Dict[str, Any]
     ) -> Generator[str, None, None]:
         """
@@ -22,23 +23,41 @@ class MessageService:
         except Conversation.DoesNotExist:
             raise NotFound(detail="Conversation not found.")
 
-        # 2. Save user message
+        # 2. Save user message with images in metadata
         user_message = Message.objects.create(
             conversation=conversation,
             role=Message.ROLE_USER,
-            content=user_text
+            content=user_text,
+            metadata={"images": images} if images else None
         )
 
         # 3. Retrieve conversation history
-        # We order by created_at ascending to feed history logically.
+        # We merge consecutive messages with the same role (e.g., User Image then User Text)
+        # to obey alternating roles (User, Model, User, Model) for Gemini API.
         messages_queryset = conversation.messages.order_by('created_at')
         
         history = []
         for msg in messages_queryset:
-            history.append({
-                "role": msg.role,
-                "content": msg.content
-            })
+            role = msg.role
+            content = msg.content or ""
+            images = msg.metadata.get("images", []) if msg.metadata else []
+
+            if history and history[-1]["role"] == role:
+                # Merge with previous message
+                history[-1]["content"] += f"\n{content}" if content and history[-1]["content"] else content
+                if images:
+                    if "images" not in history[-1]:
+                        history[-1]["images"] = []
+                    history[-1]["images"].extend(images)
+            else:
+                # Add new message
+                msg_data = {
+                    "role": role,
+                    "content": content
+                }
+                if images:
+                    msg_data["images"] = images
+                history.append(msg_data)
 
         # 4. Get the AI Client
         provider = settings.get("provider", "gemini")

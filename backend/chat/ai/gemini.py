@@ -1,4 +1,5 @@
 import os
+import base64
 from typing import Generator, List, Dict, Any
 from .base import BaseAIClient
 from google import genai
@@ -16,7 +17,7 @@ class GeminiClient(BaseAIClient):
     def generate_stream(
         self,
         system_prompt: str,
-        messages: List[Dict[str, str]],
+        messages: List[Dict[str, Any]],
         settings: Dict[str, Any]
     ) -> Generator[Dict[str, Any], None, None]:
         
@@ -37,9 +38,26 @@ class GeminiClient(BaseAIClient):
         gemini_contents = []
         for msg in messages:
             role = "user" if msg["role"] == "user" else "model"
-            gemini_contents.append(
-                types.Content(role=role, parts=[types.Part.from_text(text=msg["content"])])
-            )
+            parts = []
+            
+            # Add text part if content exists
+            if msg.get("content"):
+                parts.append(types.Part.from_text(text=msg["content"]))
+            
+            # Add image parts if they exist
+            if "images" in msg and msg["images"]:
+                for img in msg["images"]:
+                    try:
+                        image_data = base64.b64decode(img["data"])
+                        parts.append(types.Part.from_bytes(
+                            data=image_data,
+                            mime_type=img["type"]
+                        ))
+                    except Exception as e:
+                        print(f"Error decoding image: {e}")
+            
+            if parts:
+                gemini_contents.append(types.Content(role=role, parts=parts))
 
         try:
             response_stream = self.client.models.generate_content_stream(
@@ -73,7 +91,7 @@ class GeminiClient(BaseAIClient):
     def generate_content(
         self,
         system_prompt: str,
-        messages: List[Dict[str, str]],
+        messages: List[Dict[str, Any]],
         settings: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
@@ -90,9 +108,26 @@ class GeminiClient(BaseAIClient):
         gemini_contents = []
         for msg in messages:
             role = "user" if msg["role"] == "user" else "model"
-            gemini_contents.append(
-                types.Content(role=role, parts=[types.Part.from_text(text=msg["content"])])
-            )
+            parts = []
+            
+            # Add text part if content exists
+            if msg.get("content"):
+                parts.append(types.Part.from_text(text=msg["content"]))
+            
+            # Add image parts if they exist
+            if "images" in msg and msg["images"]:
+                for img in msg["images"]:
+                    try:
+                        image_data = base64.b64decode(img["data"])
+                        parts.append(types.Part.from_bytes(
+                            data=image_data,
+                            mime_type=img["type"]
+                        ))
+                    except Exception as e:
+                        print(f"Error decoding image: {e}")
+            
+            if parts:
+                gemini_contents.append(types.Content(role=role, parts=parts))
 
         try:
             response = self.client.models.generate_content(

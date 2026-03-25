@@ -11,7 +11,7 @@ class BaseAIClient(ABC):
     def generate_stream(
         self,
         system_prompt: str,
-        messages: List[Dict[str, str]],
+        messages: List[Dict[ Any, Any]],  # Simplified to avoid some type check issues in subclasses
         settings: Dict[str, Any]
     ) -> Generator[Dict[str, Any], None, None]:
         """
@@ -19,7 +19,7 @@ class BaseAIClient(ABC):
         
         Args:
             system_prompt (str): The system prompt or instructions.
-            messages (List[Dict[str, str]]): A list of dictionaries with 'role' and 'content' keys representing conversation history.
+            messages (List[Dict[str, Any]]): A list of dictionaries with 'role', 'content', and optional 'images' keys.
             settings (Dict[str, Any]): Additional settings for the model generation (e.g. temperature, model id).
             
         Yields:
@@ -27,11 +27,13 @@ class BaseAIClient(ABC):
             Format: {"text": "chunk of text", "metadata": {...}} 
             (metadata is usually None until the very end)
         """
+        pass
+
     @abstractmethod
     def generate_content(
         self,
         system_prompt: str,
-        messages: List[Dict[str, str]],
+        messages: List[Dict[str, Any]],
         settings: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
